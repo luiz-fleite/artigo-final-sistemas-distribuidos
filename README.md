@@ -1,4 +1,6 @@
-# Template SBC 2017 para Tectonic e VS Code
+# Artigo final de sistemas distribuídos 
+
+# Instruções para o Template SBC 2017 para Tectonic e VS Code
 Adaptação do **template oficial da SBC (2017)** para uso **local**, mantendo a **máxima fidelidade visual** e estrutural ao **oficial** do Overleaf. 
 
 > **TL;DR (Resumo Rápido):**
