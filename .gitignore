@@ -1,0 +1,13 @@
+# Ignorar pasta de build (artefatos de compilação)
+build/
+!build/README_ARTEFATOS.md
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/README.md
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
