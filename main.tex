@@ -35,130 +35,158 @@
 
 \maketitle
 
+Excelente escolha. O Kerberos é o padrão-ouro para ensinar segurança em Sistemas Distribuídos porque ele resolve o problema da autenticação em rede aberta sem enviar senhas, usando uma "Entidade Confiável".
+
+Abaixo preparei uma estrutura completa em LaTeX já configurada com os dados da sua equipe e seguindo o modelo da SBC.
+
+Instruções Prévias:
+
+Para esse código funcionar, você precisa do arquivo de estilo da SBC (sbc-template.sty) e a imagem do logo da SBC (opcional) na mesma pasta. Se estiverem usando o Overleaf, basta procurar o template "SBC Conferences" e substituir o código principal pelo código abaixo.
+
+Eu inseri comentários no código (tudo que vem depois de %) explicando exatamente o que vocês devem escrever em cada seção.
+
+code
+Latex
+download
+content_copy
+expand_less
+\documentclass[12pt]{article}
+
+% Pacotes obrigatórios do template SBC
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+%\usepackage[latin1]{inputenc}  % Use este se tiver problemas com acentuação no Windows antigo
+
+\sloppy
+
+% Título e Autores (Baseado na Lista da Equipe 1)
+\title{Análise do Protocolo Kerberos: Autenticação e Segurança em Sistemas Distribuídos}
+
+\author{Luiz Antonio L. F. Leite\inst{1}, Luiz Sérgio S. Maciel Filho\inst{1}, \\ Max José L. Pantoja Junior\inst{1}, Wesley Pontes Barbosa\inst{1}}
+
+
+\address{Faculdade de Computação -- Universidade Federal do Pará (UFPA)
+  \email{ {luiz.leite, luiz.filho, max.junior, wesley.barbosa}@exemplo.ufpa.br }
+}
+
+\begin{document} 
+
+\maketitle
+
+% RESUMO
 \begin{abstract}
-  This meta-paper describes the style to be used in articles and short papers
-  for SBC conferences. For papers in English, you should add just an abstract
-  while for the papers in Portuguese, we also ask for an abstract in
-  Portuguese (``resumo''). In both cases, abstracts should not have more than
-  10 lines and must be in the first page of the paper.
+  This article presents a study on digital security techniques in distributed systems, focusing on the Kerberos protocol. It explores the concepts of authentication, trusted third parties, and symmetric cryptography. Furthermore, a case study on its implementation in directory services (Active Directory) is presented, demonstrating its effectiveness in mitigating network threats.
 \end{abstract}
-     
-\begin{resumo} 
-  Este meta-artigo descreve o estilo a ser usado na confecção de artigos e
-  resumos de artigos para publicação nos anais das conferências organizadas
-  pela SBC. É solicitada a escrita de resumo e abstract apenas para os artigos
-  escritos em português. Artigos em inglês deverão apresentar apenas abstract.
-  Nos dois casos, o autor deve tomar cuidado para que o resumo (e o abstract)
-  não ultrapassem 10 linhas cada, sendo que ambos devem estar na primeira
-  página do artigo.
+
+\begin{resumo}
+  Este artigo apresenta um estudo sobre técnicas de segurança digital em sistemas distribuídos, com foco no protocolo Kerberos. São explorados os conceitos de autenticação, terceira parte confiável e criptografia simétrica. Além disso, é apresentado um estudo de caso sobre sua implementação em serviços de diretório (Active Directory), demonstrando sua eficácia na mitigação de ameaças em rede.
 \end{resumo}
 
 
-\section{General Information}
+% SEÇÃO 1: INTRODUÇÃO
+\section{Introdução}
+% O QUE ESCREVER AQUI:
+% 1. Contextualize: Em Sistemas Distribuídos, a comunicação ocorre em redes inseguras.
+% 2. O Problema: Como provar quem você é (autenticação) para um servidor remoto sem enviar sua senha pela rede, onde ela poderia ser interceptada (sniffing)?
+% 3. A Solução proposta: O uso de criptografia e protocolos de autenticação robustos, especificamente o Kerberos.
+% 4. Objetivo do trabalho: Analisar a arquitetura do Kerberos e sua aplicação prática.
 
-All full papers and posters (short papers) submitted to some SBC conference,
-including any supporting documents, should be written in English or in
-Portuguese. The format paper should be A4 with single column, 3.5 cm for upper
-margin, 2.5 cm for bottom margin and 3.0 cm for lateral margins, without
-headers or footers. The main font must be Times, 12 point nominal size, with 6
-points of space before each paragraph. Page numbers must be suppressed.
-
-Full papers must respect the page limits defined by the conference.
-Conferences that publish just abstracts ask for \textbf{one}-page texts.
-
-\section{First Page} \label{sec:firstpage}
-
-The first page must display the paper title, the name and address of the
-authors, the abstract in English and ``resumo'' in Portuguese (``resumos'' are
-required only for papers written in Portuguese). The title must be centered
-over the whole page, in 16 point boldface font and with 12 points of space
-before itself. Author names must be centered in 12 point font, bold, all of
-them disposed in the same line, separated by commas and with 12 points of
-space after the title. Addresses must be centered in 12 point font, also with
-12 points of space after the authors' names. E-mail addresses should be
-written using font Courier New, 10 point nominal size, with 6 points of space
-before and 6 points of space after.
-
-The abstract and ``resumo'' (if is the case) must be in 12 point Times font,
-indented 0.8cm on both sides. The word \textbf{Abstract} and \textbf{Resumo},
-should be written in boldface and must precede the text.
-
-\section{CD-ROMs and Printed Proceedings}
-
-In some conferences, the papers are published on CD-ROM while only the
-abstract is published in the printed Proceedings. In this case, authors are
-invited to prepare two final versions of the paper. One, complete, to be
-published on the CD and the other, containing only the first page, with
-abstract and ``resumo'' (for papers in Portuguese).
-
-\section{Sections and Paragraphs}
-
-Section titles must be in boldface, 13pt, flush left. There should be an extra
-12 pt of space before each title. Section numbering is optional. The first
-paragraph of each section should not be indented, while the first lines of
-subsequent paragraphs should be indented by 1.27 cm.
-
-\subsection{Subsections}
-
-The subsection titles must be in boldface, 12pt, flush left.
-
-\section{Figures and Captions}\label{sec:figs}
+A segurança é um dos desafios fundamentais no projeto de Sistemas Distribuídos. Diferente de sistemas centralizados, onde o sistema operacional tem controle total sobre o acesso à memória e recursos, sistemas distribuídos dependem de redes de comunicação que podem ser acessíveis a terceiros mal-intencionados...
 
 
-Figure and table captions should be centered if less than one line
-(Figure~\ref{fig:exampleFig1}), otherwise justified and indented by 0.8cm on
-both margins, as shown in Figure~\ref{fig:exampleFig2}. The caption font must
-be Helvetica, 10 point, boldface, with 6 points of space before and after each
-caption.
+% SEÇÃO 2: FUNDAMENTAÇÃO TEÓRICA
+\section{Conceitos de Segurança em Sistemas Distribuídos}
+% O QUE ESCREVER AQUI:
+% Fale brevemente sobre os pilares que sustentam o Kerberos antes de explicar o protocolo em si.
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=.5\textwidth]{fig1.jpg}
-\caption{A typical figure}
-\label{fig:exampleFig1}
-\end{figure}
+\subsection{Canais Seguros e Criptografia}
+% Explique a diferença entre Criptografia Simétrica (chave única - muito usada no Kerberos por ser rápida) e Assimétrica.
+Para garantir a confidencialidade e integridade dos dados trafegados...
 
-\begin{figure}[ht]
-\centering
-\includegraphics[width=.3\textwidth]{fig2.jpg}
-\caption{This figure is an example of a figure caption taking more than one
-  line and justified considering margins mentioned in Section~\ref{sec:figs}.}
-\label{fig:exampleFig2}
-\end{figure}
+\subsection{Autenticação e Terceira Parte Confiável (TTP)}
+% Explique o conceito de TTP (Trusted Third Party). O Kerberos funciona porque todo mundo confia no servidor central (KDC).
+A autenticação em larga escala torna-se inviável se cada servidor precisar armazenar as senhas de todos os usuários. Surge então a necessidade de uma autoridade central confiável...
 
-In tables, try to avoid the use of colored or shaded backgrounds, and avoid
-thick, doubled, or unnecessary framing lines. When reporting empirical data,
-do not use more decimal digits than warranted by their precision and
-reproducibility. Table caption must be placed before the table (see Table 1)
-and the font used must also be Helvetica, 10 point, boldface, with 6 points of
-space before and after each caption.
 
-\begin{table}[ht]
-\centering
-\caption{Variables to be considered on the evaluation of interaction
-  techniques}
-\label{tab:exTable1}
-\includegraphics[width=.7\textwidth]{table.jpg}
-\end{table}
+% SEÇÃO 3: O PROTOCOLO KERBEROS (O CORAÇÃO DO ARTIGO)
+\section{O Protocolo Kerberos}
+% O QUE ESCREVER AQUI:
+% Esta é a parte técnica pesada. Usem diagramas se possível.
 
-\section{Images}
+\subsection{Arquitetura e Componentes}
+% Descreva os componentes:
+% - Cliente
+% - Servidor de Aplicação (SS)
+% - KDC (Key Distribution Center), que se divide em:
+%     - AS (Authentication Server)
+%     - TGS (Ticket Granting Server)
 
-All images and illustrations should be in black-and-white, or gray tones,
-excepting for the papers that will be electronically available (on CD-ROMs,
-internet, etc.). The image resolution on paper should be about 600 dpi for
-black-and-white images, and 150-300 dpi for grayscale images.  Do not include
-images with excessive resolution, as they may take hours to print, without any
-visible difference in the result. 
+O Kerberos, desenvolvido pelo MIT, baseia-se no modelo de chave simétrica de Needham-Schroeder. Sua arquitetura é composta por três entidades principais...
 
-\section{References}
+\subsection{Funcionamento e Troca de Mensagens}
+% Descreva o fluxo básico (pode ser em texto ou itens):
+% 1. Login inicial (Cliente pede TGT ao AS).
+% 2. Cliente recebe o TGT (Ticket Granting Ticket).
+% 3. Cliente pede acesso a um serviço (ex: Impressora) apresentando o TGT ao TGS.
+% 4. TGS dá um Ticket de Serviço.
+% 5. Cliente acessa o serviço.
 
-Bibliographic references must be unambiguous and uniform.  We recommend giving
-the author names references in brackets, e.g. \cite{knuth:84},
-\cite{boulic:91}, and \cite{smith:99}.
+Uma característica fundamental do Kerberos é o uso de "Tickets". O usuário não se autentica em cada serviço; ele se autentica uma vez no AS e recebe um bilhete mestre (TGT)...
 
-The references must be listed using 12 point font size, with 6 points of space
-before each reference. The first line of each reference should not be
-indented, while the subsequent should be indented by 0.5 cm.
+\subsection{Mitigação de Ataques}
+% Explique como ele evita "Replay Attacks" usando Carimbos de Tempo (Timestamps).
+Para evitar que um atacante copie um ticket válido e o reutilize posteriormente (ataque de repetição), o Kerberos utiliza rigorosos carimbos de tempo...
+
+
+% SEÇÃO 4: ESTUDO DE CASO (POSSÍVEIS APLICAÇÕES)
+\section{Estudo de Caso: Microsoft Active Directory}
+% O QUE ESCREVER AQUI:
+% O professor pediu "Possíveis Aplicações". O Active Directory (AD) é a maior implementação de Kerberos do mundo.
+
+Embora o Kerberos tenha nascido no mundo Unix/Linux (projeto Athena do MIT), sua adoção massiva ocorreu através do Microsoft Active Directory (AD). Em um ambiente corporativo Windows...
+
+\subsection{Single Sign-On (SSO)}
+% Explique a vantagem prática: O usuário loga no Windows de manhã e acessa e-mail, pastas compartilhadas e impressoras sem digitar a senha de novo. Isso é o Kerberos trabalhando em background.
+A aplicação prática mais visível do Kerberos é a capacidade de \textit{Single Sign-On}. O usuário insere suas credenciais apenas na estação de trabalho...
+
+
+% SEÇÃO 5: CONCLUSÃO
+\section{Conclusão}
+% Resuma o que foi aprendido.
+% Ponto crítico: O Kerberos é excelente, mas o KDC é um "Ponto Único de Falha" (se o servidor de senhas cai, ninguém acessa nada).
+O estudo do protocolo Kerberos demonstra a importância de mecanismos centralizados de confiança em ambientes distribuídos. Apesar de sua robustez, a centralização no KDC exige estratégias de replicação para evitar indisponibilidade...
+
+\bibliographystyle{sbc}
+\begin{thebibliography}{}
+
+% EXAMPLES DE BIBLIOGRAFIA - Substituam pelos que vocês usarem
+\bibitem[Coulouris et al. 2013]{coulouris}
+Coulouris, G., Dollimore, J., Kindberg, T., and Blair, G. (2013).
+\newblock {\em Distributed Systems: Concepts and Design}.
+\newblock Pearson, 5th edition.
+
+\bibitem[Tanenbaum and van Steen 2017]{tanenbaum}
+Tanenbaum, A.~S. and van Steen, M. (2017).
+\newblock {\em Distributed Systems: Principles and Paradigms}.
+\newblock Pearson Education, 3rd edition.
+
+\bibitem[Neuman and Ts'o 1994]{neuman}
+Neuman, B.~C. and Ts'o, T. (1994).
+\newblock Kerberos: An authentication service for computer networks.
+\newblock {\em IEEE Communications Magazine}, 32(9):33--38.
+
+\end{thebibliography}
+
+\end{document}
+Dicas para preencher o conteúdo:
+
+Imagens: O professor adora diagramas. Tentem criar (ou pegar uma livre de direitos) uma imagem que mostre o "bonequinho" falando com o KDC, pegando o Ticket e indo pro Servidor. No LaTeX, usem \begin{figure}.
+
+Foco nos Termos de SD: Sempre que possível, usem termos como "Cliente-Servidor", "Concorrência" (no acesso ao KDC), "Sincronização" (o relógio do cliente e servidor tem que estar igual, senão o Kerberos falha).
+
+Tamanho: O limite é 10 páginas, mas um artigo bom de 4 a 6 páginas é suficiente para tirar nota máxima se o conteúdo for denso e bem escrito.
 
 % Estilo de citação da SBC agora localizado na pasta 'bib/'.
 \bibliographystyle{bib/sbc}
