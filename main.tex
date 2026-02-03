@@ -28,102 +28,23 @@
 
 \maketitle
 
-% RESUMO
-\begin{abstract}
-  This article presents a study on digital security techniques in distributed systems, focusing on the Kerberos protocol. It explores the concepts of authentication, trusted third parties, and symmetric cryptography. Furthermore, a case study on its implementation in directory services (Active Directory) is presented, demonstrating its effectiveness in mitigating network threats.
-\end{abstract}
+% RESUMO - TODOS 
+\input{sections/abstract}
 
-\begin{resumo}
-  Este artigo apresenta um estudo sobre técnicas de segurança digital em sistemas distribuídos, com foco no protocolo Kerberos. São explorados os conceitos de autenticação, terceira parte confiável e criptografia simétrica. Além disso, é apresentado um estudo de caso sobre sua implementação em serviços de diretório (Active Directory), demonstrando sua eficácia na mitigação de ameaças em rede.
-\end{resumo}
+% SEÇÃO 1: INTRODUÇÃO - MAX 
+\input{sections/introduction}
 
+% SEÇÃO 2: FUNDAMENTAÇÃO TEÓRICA - MAX 
+\input{sections/concepts}
 
-% SEÇÃO 1: INTRODUÇÃO
-\section{Introdução} 
-\textcolor{red}{[MAX]}
+% SEÇÃO 3: O PROTOCOLO KERBEROS - LA E SAMICO
+\input{sections/kerberos_protocol}
 
-A segurança da informação é um dos desafios mais críticos no projeto de Sistemas Distribuídos. Diferente de sistemas centralizados, onde o sistema operacional possui controle total sobre o acesso à memória e aos recursos, os sistemas distribuídos dependem de redes de comunicação para a troca de mensagens. Essas redes, frequentemente, são canais inseguros onde agentes mal-intencionados podem interceptar (sniffing), modificar ou falsear (spoofing) dados.
+% SEÇÃO 4: ESTUDO DE CASO -WESLEY 
+\input{sections/case_study}
 
-O problema central reside na autenticação: como um cliente pode provar sua identidade para um servidor remoto sem transmitir sua senha em texto claro pela rede? O envio de senhas, mesmo que esporádico, expõe as credenciais a ataques de interceptação. Além disso, em um ambiente com múltiplos serviços (arquivos, impressão, banco de dados), exigir que o usuário insira sua senha repetidamente degrada a usabilidade e aumenta o risco de comprometimento.
-
-Neste contexto, o protocolo Kerberos surge como uma solução robusta, fundamentada no uso de criptografia simétrica e em uma entidade de terceira parte confiável. O objetivo deste trabalho é analisar a arquitetura do Kerberos, detalhando seu funcionamento, a troca de mensagens para obtenção de tickets e sua aplicação prática em ambientes corporativos modernos.
-
-% SEÇÃO 2: FUNDAMENTAÇÃO TEÓRICA
-\section{Conceitos de Segurança em Sistemas Distribuídos}
-\textcolor{red}{[MAX]}
-
-Para compreender o funcionamento do Kerberos, é necessário estabelecer os fundamentos sobre canais seguros e modelos de confiança em redes distribuídas.
-
-\subsection{Canais Seguros e Criptografia}
-Um canal seguro é um meio de comunicação que garante confidencialidade, integridade e autenticação. Para implementar tais canais, utilizam-se algoritmos criptográficos que podem ser divididos em duas categorias principais: simétricos e assimétricos.
-
-A criptografia assimétrica utiliza um par de chaves (pública e privada), sendo ideal para distribuição de chaves, porém computacionalmente custosa. Já a criptografia simétrica utiliza uma única chave secreta compartilhada entre as partes para cifrar e decifrar as mensagens. O Kerberos baseia-se primordialmente na criptografia simétrica (como o algoritmo AES) devido ao seu alto desempenho, o que é essencial para suportar milhares de autenticações simultâneas em grandes redes distribuídas.
-
-\subsection{Autenticação e Terceira Parte Confiável (TTP)}
-Em um sistema distribuído de larga escala, é inviável que cada servidor conheça as senhas de todos os usuários ou que cada usuário gerencie uma chave diferente para cada serviço. Para resolver isso, adota-se o modelo de Terceira Parte Confiável (Trusted Third Party - TTP).
-
-Neste modelo, existe uma autoridade central na qual tanto o cliente quanto o servidor confiam. O Kerberos atua como essa autoridade. Em vez de o cliente provar sua identidade diretamente para o servidor de arquivos, ele prova sua identidade para a autoridade central, que então emite uma credencial temporária (ticket) aceita pelo servidor de arquivos. Isso centraliza a administração de segurança e minimiza a exposição de segredos de longa duração.
-
-% SEÇÃO 3: O PROTOCOLO KERBEROS
-\section{O Protocolo Kerberos}
-\textcolor{red}{[LA]}
-
-Desenvolvido pelo MIT no projeto Athena, o Kerberos é um protocolo de autenticação de rede projetado para fornecer autenticação forte para aplicações cliente/servidor.
-
-\subsection{Arquitetura e Componentes}
-O ecossistema Kerberos é composto por três entidades lógicas principais:
-\begin{itemize}
-    \item \textbf{Cliente:} A entidade (usuário ou software) que deseja acessar um recurso.
-    \item \textbf{Servidor de Aplicação (SS - Service Server):} O recurso que o cliente deseja acessar (ex: servidor de arquivos).
-    \item \textbf{KDC (Key Distribution Center):} A terceira parte confiável. O KDC mantém um banco de dados com as chaves secretas de todos os usuários e serviços. Logicamente, ele é dividido em dois subcomponentes:
-    \begin{itemize}
-        \item \textit{Authentication Server (AS):} Responsável pelo login inicial e emissão do TGT.
-        \item \textit{Ticket Granting Server (TGS):} Responsável por emitir tickets para serviços específicos com base em um TGT válido.
-    \end{itemize}
-\end{itemize}
-
-\subsection{Funcionamento e Troca de Mensagens}
-O fluxo de autenticação no Kerberos ocorre em etapas distintas, desenhadas para garantir que a senha do usuário nunca trafegue pela rede:
-
-\begin{enumerate}
-    \item \textbf{Solicitação de Autenticação (AS\_REQ):} O cliente envia uma solicitação ao AS informando sua identidade (em texto claro).
-    \item \textbf{Emissão do TGT (AS\_REP):} O AS verifica se o usuário existe. Se sim, gera uma chave de sessão e um Ticket de Concessão de Tickets (TGT). O TGT é criptografado com a chave do TGS, e a resposta para o cliente é criptografada com a chave derivada da senha do usuário. O cliente decifra essa resposta, obtendo a chave de sessão e o TGT, sem que a senha tenha saído de sua máquina.
-    \item \textbf{Solicitação de Serviço (TGS\_REQ):} Quando o cliente precisa acessar um recurso (ex: impressora), ele envia ao TGS o seu TGT e um "Autenticador".
-    \item \textbf{Emissão do Ticket de Serviço (TGS\_REP):} O TGS valida o TGT. Se válido, gera um Ticket de Serviço (criptografado com a chave do servidor de destino) e o envia ao cliente.
-    \item \textbf{Acesso ao Recurso (AP\_REQ):} O cliente apresenta o Ticket de Serviço ao servidor da aplicação, que o decifra e valida a identidade do cliente, permitindo o acesso.
-\end{enumerate}
-
-\subsection{Mitigação de Ataques}
-\textcolor{red}{[SAMICO]}
-
-Uma das principais ameaças em autenticação distribuída é o "Ataque de Repetição" (\textit{Replay Attack}), onde um atacante intercepta um ticket válido e o reenvia para o servidor para ganhar acesso não autorizado.
-
-O Kerberos mitiga isso através do uso de \textit{Timestamps} (carimbos de tempo). Cada ticket e autenticador possui a hora de criação e um tempo de vida (TTL) curto (geralmente 8 a 10 horas para TGTs e minutos para autenticadores). Se um servidor receber um pacote com um horário muito diferente do seu relógio local (fora de uma janela de tolerância, comumente 5 minutos), a solicitação é rejeitada. Isso implica que a sincronização de relógios (via NTP) é um requisito obrigatório para o funcionamento de redes Kerberos.
-
-% SEÇÃO 4: ESTUDO DE CASO
-\section{Estudo de Caso: Microsoft Active Directory}
-\textcolor{red}{[WESLEY]}
-
-Embora o Kerberos seja um padrão aberto, sua implementação mais difundida ocorre no Microsoft Active Directory (AD), utilizado globalmente para gerenciamento de identidades em redes corporativas. Desde o Windows 2000, o Kerberos é o protocolo de autenticação padrão, substituindo o antigo NTLM.
-
-No AD, os Controladores de Domínio (Domain Controllers) atuam como o KDC. Ao ingressar em um domínio, computadores e usuários recebem chaves secretas que são gerenciadas centralmente pelo AD.
-
-\subsection{Single Sign-On (SSO)}
-A principal aplicação prática perceptível ao usuário final é o recurso de \textit{Single Sign-On} (SSO). Em um ambiente distribuído sem Kerberos, o usuário teria que digitar sua senha cada vez que acessasse uma pasta compartilhada em um servidor diferente ou acessasse a intranet.
-
-Com a implementação do Kerberos no AD, o processo ocorre em segundo plano:
-\begin{enumerate}
-    \item O usuário faz login na estação de trabalho (autenticação junto ao AS).
-    \item O sistema operacional armazena o TGT na memória segura (LSASS).
-    \item Quando o usuário clica em uma pasta de rede, o sistema operacional detecta a necessidade de autenticação, envia o TGT ao Controlador de Domínio (TGS), obtém o ticket de serviço e autentica-se no servidor de arquivos.
-\end{enumerate}
-Tudo isso ocorre de forma transparente, proporcionando segurança robusta sem sacrificar a usabilidade.
-
-% SEÇÃO 5: CONCLUSÃO
-\section{Conclusão}
-O protocolo Kerberos representa um marco na segurança de Sistemas Distribuídos, resolvendo o complexo problema de autenticação em redes inseguras através de criptografia simétrica e de uma arquitetura de confiança centralizada. Sua capacidade de separar as credenciais de longa duração (senhas) das credenciais de sessão (tickets) reduz drasticamente a superfície de ataque.
-
-Contudo, o modelo apresenta desafios. O KDC torna-se um ponto único de falha e um potencial gargalo de desempenho; se o KDC estiver indisponível, ninguém consegue acessar recursos na rede. Por isso, implementações reais, como o Active Directory, exigem replicação de servidores KDC. Além disso, a dependência estrita de sincronização de relógios impõe requisitos de infraestrutura adicionais. Apesar dessas limitações, o Kerberos permanece como o padrão da indústria para autenticação segura em intranets e sistemas corporativos.
+% SEÇÃO 5: CONCLUSÃO - TODOS 
+\input{sections/conclusion}
 
 
 % Estilo de citação da SBC agora localizado na pasta 'bib/'.

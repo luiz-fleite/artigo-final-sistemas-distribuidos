@@ -1,0 +1,6 @@
+\subsection{Mitigação de Ataques}
+\textcolor{red}{[SAMICO]}
+
+Uma das principais ameaças em autenticação distribuída é o "Ataque de Repetição" (\textit{Replay Attack}), onde um atacante intercepta um ticket válido e o reenvia para o servidor para ganhar acesso não autorizado.
+
+O Kerberos mitiga isso através do uso de \textit{Timestamps} (carimbos de tempo). Cada ticket e autenticador possui a hora de criação e um tempo de vida (TTL) curto (geralmente 8 a 10 horas para TGTs e minutos para autenticadores). Se um servidor receber um pacote com um horário muito diferente do seu relógio local (fora de uma janela de tolerância, comumente 5 minutos), a solicitação é rejeitada. Isso implica que a sincronização de relógios (via NTP) é um requisito obrigatório para o funcionamento de redes Kerberos.

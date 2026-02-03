@@ -1,0 +1,18 @@
+% SEÇÃO 4: ESTUDO DE CASO
+\section{Estudo de Caso: Microsoft Active Directory}
+\textcolor{red}{[WESLEY]}
+
+Embora o Kerberos seja um padrão aberto, sua implementação mais difundida ocorre no Microsoft Active Directory (AD), utilizado globalmente para gerenciamento de identidades em redes corporativas. Desde o Windows 2000, o Kerberos é o protocolo de autenticação padrão, substituindo o antigo NTLM.
+
+No AD, os Controladores de Domínio (Domain Controllers) atuam como o KDC. Ao ingressar em um domínio, computadores e usuários recebem chaves secretas que são gerenciadas centralmente pelo AD.
+
+\subsection{Single Sign-On (SSO)}
+A principal aplicação prática perceptível ao usuário final é o recurso de \textit{Single Sign-On} (SSO). Em um ambiente distribuído sem Kerberos, o usuário teria que digitar sua senha cada vez que acessasse uma pasta compartilhada em um servidor diferente ou acessasse a intranet.
+
+Com a implementação do Kerberos no AD, o processo ocorre em segundo plano:
+\begin{enumerate}
+    \item O usuário faz login na estação de trabalho (autenticação junto ao AS).
+    \item O sistema operacional armazena o TGT na memória segura (LSASS).
+    \item Quando o usuário clica em uma pasta de rede, o sistema operacional detecta a necessidade de autenticação, envia o TGT ao Controlador de Domínio (TGS), obtém o ticket de serviço e autentica-se no servidor de arquivos.
+\end{enumerate}
+Tudo isso ocorre de forma transparente, proporcionando segurança robusta sem sacrificar a usabilidade.

@@ -1,0 +1,5 @@
+% SEÇÃO 5: CONCLUSÃO
+\section{Conclusão}
+O protocolo Kerberos representa um marco na segurança de Sistemas Distribuídos, resolvendo o complexo problema de autenticação em redes inseguras através de criptografia simétrica e de uma arquitetura de confiança centralizada. Sua capacidade de separar as credenciais de longa duração (senhas) das credenciais de sessão (tickets) reduz drasticamente a superfície de ataque.
+
+Contudo, o modelo apresenta desafios. O KDC torna-se um ponto único de falha e um potencial gargalo de desempenho; se o KDC estiver indisponível, ninguém consegue acessar recursos na rede. Por isso, implementações reais, como o Active Directory, exigem replicação de servidores KDC. Além disso, a dependência estrita de sincronização de relógios impõe requisitos de infraestrutura adicionais. Apesar dessas limitações, o Kerberos permanece como o padrão da indústria para autenticação segura em intranets e sistemas corporativos.

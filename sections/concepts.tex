@@ -1,0 +1,15 @@
+% SEÇÃO 2: FUNDAMENTAÇÃO TEÓRICA
+\section{Conceitos de Segurança em Sistemas Distribuídos}
+\textcolor{red}{[MAX]}
+
+Para compreender o funcionamento do Kerberos, é necessário estabelecer os fundamentos sobre canais seguros e modelos de confiança em redes distribuídas.
+
+\subsection{Canais Seguros e Criptografia}
+Um canal seguro é um meio de comunicação que garante confidencialidade, integridade e autenticação. Para implementar tais canais, utilizam-se algoritmos criptográficos que podem ser divididos em duas categorias principais: simétricos e assimétricos.
+
+A criptografia assimétrica utiliza um par de chaves (pública e privada), sendo ideal para distribuição de chaves, porém computacionalmente custosa. Já a criptografia simétrica utiliza uma única chave secreta compartilhada entre as partes para cifrar e decifrar as mensagens. O Kerberos baseia-se primordialmente na criptografia simétrica (como o algoritmo AES) devido ao seu alto desempenho, o que é essencial para suportar milhares de autenticações simultâneas em grandes redes distribuídas.
+
+\subsection{Autenticação e Terceira Parte Confiável (TTP)}
+Em um sistema distribuído de larga escala, é inviável que cada servidor conheça as senhas de todos os usuários ou que cada usuário gerencie uma chave diferente para cada serviço. Para resolver isso, adota-se o modelo de Terceira Parte Confiável (Trusted Third Party - TTP).
+
+Neste modelo, existe uma autoridade central na qual tanto o cliente quanto o servidor confiam. O Kerberos atua como essa autoridade. Em vez de o cliente provar sua identidade diretamente para o servidor de arquivos, ele prova sua identidade para a autoridade central, que então emite uma credencial temporária (ticket) aceita pelo servidor de arquivos. Isso centraliza a administração de segurança e minimiza a exposição de segredos de longa duração.
