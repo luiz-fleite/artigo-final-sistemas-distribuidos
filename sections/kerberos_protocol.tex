@@ -20,11 +20,11 @@ O ecossistema Kerberos é composto por três entidades lógicas principais:
 O fluxo de autenticação no Kerberos ocorre em etapas distintas, desenhadas para garantir que a senha do usuário nunca trafegue pela rede:
 
 \begin{enumerate}
-    \item \textbf{Solicitação de Autenticação (AS_REQ):} O cliente envia uma solicitação ao AS informando sua identidade (em texto claro).
-    \item \textbf{Emissão do TGT (AS_REP):} O AS verifica se o usuário existe. Se sim, gera uma chave de sessão e um Ticket de Concessão de Tickets (TGT). O TGT é criptografado com a chave do TGS, e a resposta para o cliente é criptografada com a chave derivada da senha do usuário. O cliente decifra essa resposta, obtendo a chave de sessão e o TGT, sem que a senha tenha saído de sua máquina.
-    \item \textbf{Solicitação de Serviço (TGS_REQ):} Quando o cliente precisa acessar um recurso (ex: impressora), ele envia ao TGS o seu TGT e um "Autenticador".
-    \item \textbf{Emissão do Ticket de Serviço (TGS_REP):} O TGS valida o TGT. Se válido, gera um Ticket de Serviço (criptografado com a chave do servidor de destino) e o envia ao cliente.
-    \item \textbf{Acesso ao Recurso (AP_REQ):} O cliente apresenta o Ticket de Serviço ao servidor da aplicação, que o decifra e valida a identidade do cliente, permitindo o acesso.
+    \item \textbf{Solicitação de Autenticação (AS\_REQ):} O cliente envia uma solicitação ao AS informando sua identidade (em texto claro).
+    \item \textbf{Emissão do TGT (AS\_REP):} O AS verifica se o usuário existe. Se sim, gera uma chave de sessão e um Ticket de Concessão de Tickets (TGT). O TGT é criptografado com a chave do TGS, e a resposta para o cliente é criptografada com a chave derivada da senha do usuário. O cliente decifra essa resposta, obtendo a chave de sessão e o TGT, sem que a senha tenha saído de sua máquina.
+    \item \textbf{Solicitação de Serviço (TGS\_REQ):} Quando o cliente precisa acessar um recurso (ex: impressora), ele envia ao TGS o seu TGT e um "Autenticador".
+    \item \textbf{Emissão do Ticket de Serviço (TGS\_REP):} O TGS valida o TGT. Se válido, gera um Ticket de Serviço (criptografado com a chave do servidor de destino) e o envia ao cliente.
+    \item \textbf{Acesso ao Recurso (AP\_REQ):} O cliente apresenta o Ticket de Serviço ao servidor da aplicação, que o decifra e valida a identidade do cliente, permitindo o acesso.
 \end{enumerate}
 
 % Subseção: Vulnerabilidades e Mitigações - SAMICO 
