@@ -1,6 +1,158 @@
-\subsection{Mitigação de Ataques}
-\textcolor{red}{[SAMICO]}
+\subsection{Mitigação de Ataques e Robustez do Protocolo}
 
-Uma das principais ameaças em autenticação distribuída é o "Ataque de Repetição" (\textit{Replay Attack}), onde um atacante intercepta um ticket válido e o reenvia para o servidor para ganhar acesso não autorizado.
+A arquitetura do Kerberos foi projetada sob o pressuposto de que a rede é inerentemente insegura, onde pacotes podem ser interceptados, modificados ou injetados. Para garantir a segurança, o protocolo utiliza uma combinação de segredos compartilhados, criptografia simétrica e uma Terceira Parte Confiável (TTP) \cite{coulouris2013}.
 
-O Kerberos mitiga isso através do uso de \textit{Timestamps} (carimbos de tempo). Cada ticket e autenticador possui a hora de criação e um tempo de vida (TTL) curto (geralmente 8 a 10 horas para TGTs e minutos para autenticadores). Se um servidor receber um pacote com um horário muito diferente do seu relógio local (fora de uma janela de tolerância, comumente 5 minutos), a solicitação é rejeitada. Isso implica que a sincronização de relógios (via NTP) é um requisito obrigatório para o funcionamento de redes Kerberos.
+A Tabela \ref{tab:mitigacao} detalha como os principais componentes do protocolo atuam na defesa contra ameaças comuns:
+
+\begin{table}[h]
+\centering
+\caption{Mecanismos de Segurança e Ameaças Mitigadas}
+\label{tab:mitigacao}
+\begin{tabular}{|l|p{9.5cm}|}
+\hline
+\rowcolor[HTML]{EFEFEF} 
+\textbf{Mecanismo} & \textbf{Defesa e Funcionamento} \\ \hline
+\textbf{Timestamps} & Impede o \textit{Replay Attack}. O servidor de aplicação verifica se o horário no autenticador está dentro da janela de sincronização permitida em relação ao seu relógio local \cite{neuman1994}. \\ \hline
+\textbf{Authenticators} & Provam que o cliente possui a chave de sessão em tempo real. Como são válidos apenas para uma única solicitação, sua interceptação torna-se inútil para uso posterior. \\ \hline
+\textbf{Autenticação Mútua} & Opcionalmente, o servidor pode provar sua identidade ao cliente decifrando o timestamp enviado e reenviando-o (incrementado), o que mitiga ataques de \textit{Server Spoofing}. \\ \hline
+\textbf{Pre-Authentication} & Exige que o cliente cifre um timestamp com sua senha antes do AS emitir o TGT. Isso dificulta ataques de dicionário \textit{offline}, pois o KDC não envia respostas cifradas para qualquer usuário arbitrário. \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Autenticação e Pré-autenticação}
+
+O processo de autenticação inicial no ecossistema Kerberos estabelece o primeiro nível de confiança entre o usuário e a infraestrutura de rede e ocorre primordialmente através da comunicação direta com o Servidor de Autenticação. Durante esta fase, o objetivo principal reside na obtenção de uma credencial mestra, amplamente denominada como Ticket de Concessão de Tickets, que servirá como a base para todas as solicitações subsequentes de serviços na rede \cite{neuman1994}. Esta etapa é crítica, pois é o único momento em que o sistema lida diretamente com a chave derivada da senha do usuário, o que exige mecanismos rigorosos para evitar o vazamento de informações.
+
+Nas versões fundamentais do protocolo, o servidor respondia a qualquer pedido de login com uma mensagem cifrada pela chave do usuário, o que permitia que um atacante coletasse esses pacotes para realizar tentativas de decodificação exaustivas em ambientes externos. Para mitigar esta vulnerabilidade, as implementações contemporâneas utilizam o mecanismo de pré-autenticação, que obriga o cliente a provar o conhecimento de sua chave secreta antes mesmo que o Centro de Distribuição de Chaves emita qualquer resposta relevante. Na prática, o dispositivo do usuário cifra um carimbo de tempo atualizado com a chave derivada de sua senha e o envia como parte da requisição inicial, o que permite ao servidor validar a identidade do solicitante de forma imediata \cite{tanenbaum2017}.
+
+A adoção da pré-autenticação eleva consideravelmente a segurança do sistema, pois impede que um invasor obtenha amostras de texto cifrado para ataques de dicionário sem antes superar o desafio criptográfico inicial. Caso o Servidor de Autenticação consiga decifrar o carimbo de tempo enviado, ele confirma a legitimidade do pedido e prossegue com a emissão do ticket cifrado pela chave do Servidor de Concessão de Tickets, o que garante a integridade do fluxo de credenciais desde o primeiro contato com a autoridade central \cite{coulouris2013}. Este procedimento assegura que apenas usuários devidamente autenticados possam interagir com as camadas mais profundas do protocolo e preserva a robustez da rede contra tentativas de acesso não autorizado por meio de suposições de credenciais.
+
+\subsubsection{Prevenção contra Ataques de Repetição (\textit{Replay})}
+A eficácia do Kerberos contra o sequestro de sessões reside na volatilidade controlada do \textit{Authenticator}. Diferente de um token estático, o autenticador é uma estrutura de dados de "uso único" que vincula a identidade do cliente ao exato momento da solicitação. Segundo Neuman e Ts'o \cite{neuman1994}, essa construção permite que o servidor de aplicação verifique a atualidade da requisição sem consultar o KDC em tempo real, o que preserva a escalabilidade do sistema.
+
+O processo de detecção de repetição ocorre em um equilíbrio entre o \textit{Clock Skew} e o \textit{Replay Cache}. O servidor primeiro aplica um filtro temporal: se o \textit{timestamp} cifrado na mensagem divergir do relógio do servidor além da margem de tolerância (geralmente 5 minutos), a mensagem é descartada por presunção de obsolescência ou tentativa de fraude. No entanto, se o atacante capturar e reenviar o pacote dentro deste intervalo de 5 minutos, o filtro temporal sozinho falharia. É aqui que entra o cache de repetição, que atua como uma memória de curto prazo do servidor. Para cada autenticador validado, o servidor armazena uma entrada contendo o nome do cliente, o serviço solicitado e o \textit{timestamp}. Se uma nova solicitação apresentar dados idênticos aos contidos no cache, o servidor identifica a colisão e interrompe o acesso, tratando a conexão como uma duplicata maliciosa \cite{tanenbaum2017}.
+
+Um aspecto crítico dessa implementação é que o cache não precisa crescer indefinidamente. Como qualquer mensagem com mais de 5 minutos é automaticamente rejeitada pelo filtro de \textit{Clock Skew}, o servidor pode descartar registros do cache que superem essa idade. Essa simbiose garante proteção robusta com baixo custo computacional. Contudo, essa dependência torna o protocolo vulnerável a manipulações no serviço de tempo; se um invasor conseguir comprometer o servidor NTP (\textit{Network Time Protocol}) da rede, ele poderia, teoricamente, "congelar" ou retroceder o tempo percebido pelos servidores, estendendo a validade de tickets capturados e viabilizando ataques de repetição que o cache já teria descartado \cite{coulouris2013}.
+
+\begin{tikzpicture}
+\begin{axis}[
+    width=14cm, 
+    height=8cm,
+    axis x line=middle, % Timeline agora exatamente no y=0
+    axis y line=none,
+    xmin=0, xmax=21, 
+    ymin=-4.5, ymax=7, % Aumentado espaço para cache (baixo) e labels (cima)
+    % xlabel={Linha Temporal (minutos)},
+    % xlabel style={at={(ticklabel cs:1.0)}, anchor=north west, xshift=-2cm, yshift=-0.5cm},
+    xtick={5, 10, 15},
+    xticklabel style={yshift=-2mm}, % Labels do tempo logo abaixo do eixo
+    xticklabels={$T_s - 5$, $T_s$, $T_s + 5$},
+    clip=false,
+    title={\textbf{Mecanismo de Prevenção de Replay com Replay Cache}}
+]
+
+% Janela de Tolerância (Cinza claro) - Mais alta
+\fill[gray!15] (axis cs:5, 0) rectangle (axis cs:15, 5.0);
+\node[gray!70, font=\small\bfseries] at (axis cs:10, 5.3) {Janela de Tolerância (Clock Skew)};
+
+% Tempo do Servidor (Dashed Black)
+\draw[black, dashed, thick] (axis cs:10, 0) -- (axis cs:10, 5.0);
+
+% --- REPRESENTAÇÃO DO CACHE (MAIS ABAIXO PARA NÃO SOBREPOR TICK LABELS) ---
+% Caixa levemente maior para comportar duas linhas de log
+\draw[black, thick, fill=white] (axis cs:4.5, -2.0) rectangle (axis cs:10.8, -4.0);
+\node[font=\tiny\bfseries, gray] at (axis cs:7.65, -2.4) {REPLAY CACHE MEMORY};
+
+% Entrada 1: Legítima (Preta)
+\node[font=\scriptsize, anchor=west] at (axis cs:4.7, -3) {\texttt{\{ID:UserA, T:7.5\}}};
+
+% Entrada 2: Duplicata Rejeitada (Vermelha + Strikethrough)
+\node[red, font=\scriptsize, anchor=west] (RejectedEntry) at (axis cs:4.7, -3.6) {\texttt{\{ID:UserA, T:7.5\}}};
+\draw[red, thick] (axis cs:4.7, -3.6) -- (axis cs:10.5, -3.6); % Linha de strikethrough
+
+% --- Indicador de Rejeição (Alinhado com a entrada rejeitada) ---
+\node[red, font=\Huge, right] (TheX) at (axis cs:10.8, -3.6) {\texttimes};
+\node[red, font=\tiny, right, align=left] at (axis cs:12.0, -3.6) {Duplicata\\Detectada};
+
+
+% 1. Solicitação Expirada
+\draw[gray!60, thick, -{Stealth[scale=1.2]}] (axis cs:2, 2.5) -- (axis cs:2, 0);
+\node[gray!60, align=center, font=\footnotesize, above] at (axis cs:2, 2.5) {Ticket Antigo\\(Rejeitado)};
+
+% 2. Solicitação Legítima
+\draw[black, thick, -{Stealth[scale=1.2]}] (axis cs:7.5, 2.5) -- (axis cs:7.5, 0);
+\node[black, align=center, font=\footnotesize, above] at (axis cs:7.5, 2.5) {1\textordfeminine Solicitação\\(Aceita)};
+
+% Seta indicando armazenamento (Aponta para o cache bem abaixo)
+\draw[black, dashed, ->] (axis cs:7.5, 0) -- (axis cs:7.5, -1.9);
+
+% 3. Ataque de Repetição (VERMELHO)
+% Seta mais alta e label acima da caixa de tolerância para evitar sobreposição
+\draw[red, thick, -{Stealth[scale=1.2]}] (axis cs:13, 2.5) -- (axis cs:7.5, 0);
+\node[red, align=center, font=\footnotesize, above] at (axis cs:13, 2.5) {Ataque de Repetição\\(Rejeitado)};
+
+% --- ARCO VERMELHO (INVERTIDO VERTICALMENTE) ---
+% Ajustado para apontar exatamente para o centro do X
+\draw[red, thick, dashed, ->] (axis cs:7.5, 0) 
+    .. controls (axis cs:7.5, 2.5) and (axis cs:11.5, 2.5) .. 
+    (TheX.center);
+
+\end{axis}
+\end{tikzpicture}
+
+\subsubsection{Autenticação Mútua e Confidencialidade}
+A autenticação mútua constitui um dos pilares mais significativos do protocolo Kerberos e assegura que o servidor também comprove sua identidade perante o cliente, o que previne que o usuário forneça dados sensíveis a um serviço impostor. Este processo depende inteiramente da chave de sessão, referenciada matematicamente como $K_{c,s}$, que consiste em um segredo temporário compartilhado exclusivamente entre o cliente, o servidor de destino e o Centro de Distribuição de Chaves \cite{neuman1994}. Quando o servidor recebe o pedido de acesso, ele utiliza sua própria chave secreta para extrair a chave de sessão contida no ticket e, em seguida, cifra um carimbo de tempo modificado para retornar ao cliente. Esse retorno serve como uma evidência técnica da legitimidade do serviço, visto que apenas o servidor autêntico possui os meios criptográficos para acessar a chave de sessão necessária para tal resposta.
+
+\begin{tikzpicture}[
+    node distance=1.5cm and 3cm,
+    entity/.style={rectangle, draw, fill=gray!10, minimum width=2.5cm, minimum height=1cm, font=\bfseries},
+    msg/.style={-{Stealth[scale=1.2]}, thick},
+    label/.style={font=\footnotesize, align=center}
+]
+
+% Entidades
+\node[entity] (client) {Cliente};
+\node[entity] (server) [right=5cm of client] {Servidor (SS)};
+
+% Linhas de vida
+\draw[dashed, gray] (client.south) -- +(0,-5.5);
+\draw[dashed, gray] (server.south) -- +(0,-5.5);
+
+% Passo 1: Envio do Ticket e Autenticador
+\draw[msg] ($(client.south)+(0,-1)$) -- ($(server.south)+(0,-1)$) 
+    node[midway, above, label] {1. Ticket de Serviço e Autenticador \\ $\{T_c, \text{ID}_c\}_{K_{c,s}}$};
+
+% Box de Processamento no Servidor
+\node[draw, fill=white, font=\tiny, align=left, thin] at ($(server.south)+(1.8,-2.2)$) {
+    \textbf{Processamento SS:}\\
+    1. Abre Ticket com $K_{ss}$\\
+    2. Extrai chave $K_{c,s}$\\
+    3. Abre Autenticador\\
+    4. Valida $T_c$ e ID
+};
+
+% Passo 2: A PROVA (RELEVANTE EM VERMELHO)
+\draw[msg, red, thick] ($(server.south)+(0,-4)$) -- ($(client.south)+(0,-4)$) 
+    node[midway, above, label, red, font=\footnotesize\bfseries] {2. Confirmação de Identidade (Prova) \\ $\{T_c + 1\}_{K_{c,s}}$};
+
+% Legenda técnica no Cliente
+\node[draw=red, fill=red!5, font=\tiny, align=left, thin] at ($(client.south)+(-1.8,-5)$) {
+    \textbf{Validação no Cliente:}\\
+    Se decifrado com $K_{c,s}$ resulta em $T_c + 1$,\\
+    então o servidor é \textbf{legítimo}.
+};
+
+% Título do gráfico
+\node[above=0.5cm of $(client.north)!0.5!(server.north)$, font=\large\bfseries] {Fluxo de Autenticação Mútua};
+
+\end{tikzpicture}
+
+No que concerne à confidencialidade das informações, o sistema estabelece uma separação rigorosa entre as chaves de longa duração, as quais são baseadas nas senhas dos usuários, e as chaves de sessão geradas para cada interação específica. Essa arquitetura garante que as senhas mestras nunca sejam transmitidas diretamente pela rede, o que as protege contra ataques de interceptação passiva. Além disso, a natureza efêmera das credenciais de serviço assegura que o eventual comprometimento de uma chave de sessão não resulte na exposição de outros recursos do sistema, o que limita o impacto de falhas de segurança a um contexto isolado e temporalmente restrito \cite{tanenbaum2017}. Ao descentralizar a confiança por meio de segredos dinâmicos, o Kerberos mantém a integridade dos dados e a privacidade dos usuários em ambientes de rede inerentemente inseguros \cite{coulouris2013}.
+
+\subsubsection{Vulnerabilidades e Pontos de Falha}
+
+Apesar da robustez oferecida pelo protocolo, a centralização da confiança no Centro de Distribuição de Chaves introduz riscos estruturais significativos que devem ser considerados no projeto de sistemas seguros. O KDC constitui um ponto único de falha, de modo que a indisponibilidade deste serviço impede que qualquer usuário ou servidor estabeleça novas sessões de comunicação na rede. Em implementações de larga escala, como o Microsoft Active Directory, essa limitação é mitigada por meio da replicação de controladores de domínio, o que garante a continuidade do serviço, mas eleva a complexidade do gerenciamento de chaves sincronizadas entre os múltiplos servidores \cite{tanenbaum2017}.
+
+A segurança do Kerberos reside na integridade física e lógica do KDC, visto que o comprometimento desta entidade central anula todas as garantias de confidencialidade e autenticidade. Caso um invasor obtenha acesso à chave mestra do serviço de concessão de tickets, ele torna-se capaz de forjar credenciais conhecidas como \textit{Golden Tickets}. Essas credenciais fraudulentas permitem que o atacante se mascare como qualquer usuário, inclusive administradores, com tempos de expiração arbitrários, o que torna a detecção do acesso não autorizado extremamente difícil para as ferramentas de monitoramento convencionais \cite{neuman1994}.
+
+Adicionalmente, a dependência estrita da sincronização de relógios representa uma superfície de ataque persistente. Embora o uso de janelas de tolerância e caches de repetição proteja o sistema contra capturas de pacotes em tempo real, a fragilidade do protocolo NTP pode ser explorada para manipular o tempo percebido pelas entidades da rede. Se um agente mal-intencionado conseguir desviar o relógio de um servidor de aplicação, ele poderá viabilizar o reuso de tickets que já deveriam estar expirados, o que compromete a eficácia dos mecanismos de defesa baseados em \textit{timestamps} \cite{coulouris2013}. Dessa forma, a segurança do Kerberos não é uma propriedade isolada do protocolo, mas sim o resultado da integridade conjunta de toda a infraestrutura de suporte.
