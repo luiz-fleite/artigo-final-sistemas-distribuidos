@@ -1,15 +1,24 @@
 % SEÇÃO 2: FUNDAMENTAÇÃO TEÓRICA
-\section{Conceitos de Segurança em Sistemas Distribuídos}
-\textcolor{red}{[MAX]}
+\section{Conceitos de Segurança em Sistemas Distribuídoss}
 
-Para compreender o funcionamento do Kerberos, é necessário estabelecer os fundamentos sobre canais seguros e modelos de confiança em redes distribuídas.
+Para compreender o funcionamento e as decisões de projeto do Kerberos, é imperativo estabelecer os fundamentos sobre canais seguros e os modelos de confiança em redes distribuídas. A segurança nestes sistemas depende da capacidade de transformar um canal de comunicação inseguro em um canal seguro através de mecanismos criptográficos.
 
 \subsection{Canais Seguros e Criptografia}
-Um canal seguro é um meio de comunicação que garante confidencialidade, integridade e autenticação. Para implementar tais canais, utilizam-se algoritmos criptográficos que podem ser divididos em duas categorias principais: simétricos e assimétricos.
 
-A criptografia assimétrica utiliza um par de chaves (pública e privada), sendo ideal para distribuição de chaves, porém computacionalmente custosa. Já a criptografia simétrica utiliza uma única chave secreta compartilhada entre as partes para cifrar e decifrar as mensagens. O Kerberos baseia-se primordialmente na criptografia simétrica (como o algoritmo AES) devido ao seu alto desempenho, o que é essencial para suportar milhares de autenticações simultâneas em grandes redes distribuídas.
+Um canal seguro é um meio de comunicação que garante propriedades essenciais de segurança, nomeadamente: a \textbf{confidencialidade}, assegurando que apenas as partes autorizadas tenham acesso à informação; a \textbf{integridade}, garantindo que a mensagem não foi alterada em trânsito; e a \textbf{autenticação}, que confirma a identidade das partes envolvidas \cite{coulouris2013}.
+
+Para implementar tais canais, utilizam-se algoritmos criptográficos divididos em duas categorias principais:
+\begin{itemize}
+    \item Criptografia assimétrica (Chave Pública): utiliza um par de chaves (pública e privada). Embora resolva problemas de distribuição de chaves e assinatura digital, possui alto custo computacional, sendo centenas de vezes mais lenta que a criptografia simétrica.
+    \item Criptografia simétrica (Chave Secreta): utiliza uma única chave compartilhada entre as partes para cifrar e decifrar as mensagens (ex: AES, DES). Devido ao seu alto desempenho, é a escolha ideal para cifrar o fluxo de dados em sessões de comunicação longas.
+\end{itemize}
+
+O protocolo Kerberos baseia-se primordialmente na criptografia simétrica para garantir velocidade no processamento de milhares de autenticações simultâneas. No entanto, o uso exclusivo de chaves simétricas introduz um desafio logístico crítico: a distribuição segura dessas chaves.
 
 \subsection{Autenticação e Terceira Parte Confiável (TTP)}
-Em um sistema distribuído de larga escala, é inviável que cada servidor conheça as senhas de todos os usuários ou que cada usuário gerencie uma chave diferente para cada serviço. Para resolver isso, adota-se o modelo de Terceira Parte Confiável (Trusted Third Party - TTP).
 
-Neste modelo, existe uma autoridade central na qual tanto o cliente quanto o servidor confiam. O Kerberos atua como essa autoridade. Em vez de o cliente provar sua identidade diretamente para o servidor de arquivos, ele prova sua identidade para a autoridade central, que então emite uma credencial temporária (ticket) aceita pelo servidor de arquivos. Isso centraliza a administração de segurança e minimiza a exposição de segredos de longa duração.
+Em um sistema distribuído de larga escala com $N$ entidades (usuários e servidores), se cada par de entidades precisasse se comunicar diretamente com segurança, seriam necessárias $N(N-1)/2$ chaves secretas distintas. O gerenciamento descentralizado dessas chaves torna-se inviável à medida que o sistema cresce.
+
+Para mitigar esse problema de complexidade quadrática, adota-se o modelo de Terceira Parte Confiável (\textit{Trusted Third Party} -- TTP). Neste modelo, introduz-se uma autoridade central na qual todos os participantes confiam, denominada Centro de Distribuição de Chaves (\textit{Key Distribution Center} -- KDC).
+
+Em vez de o cliente provar sua identidade diretamente para cada servidor de arquivos ou impressão, ele prova sua identidade uma única vez para o KDC. A autoridade central, então, emite credenciais temporárias (tickets) cifradas, que o cliente apresenta aos servidores de destino. Essa arquitetura centraliza a administração de segurança, minimiza a exposição de segredos de longa duração (senhas) e permite a escalabilidade do sistema, visto que cada nova entidade precisa estabelecer uma chave secreta apenas com o KDC, e não com todos os outros participantes da rede.
