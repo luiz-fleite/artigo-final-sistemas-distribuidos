@@ -24,41 +24,61 @@ O ecossistema Kerberos opera baseando-se em tickets e é composto pelas três en
 \subsection{Fluxo de Mensagens e Chaves de Sessão}
 
 O funcionamento do Kerberos pode ser dividido em três fases distintas: a autenticação inicial, a obtenção de autorização para serviços e o acesso ao recurso. A Figura \ref{fig:kerberos_flow} ilustra a troca de mensagens entre as entidades.
-
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[
-    node distance=3cm,
-    entity/.style={rectangle, draw, fill=blue!10, minimum width=2.5cm, minimum height=1cm, font=\bfseries},
+    % Aumentamos a distância e o tamanho padrão das caixas
+    node distance=6cm,
+    entity/.style={rectangle, draw, rounded corners, fill=blue!10, minimum width=3cm, minimum height=4cm, font=\bfseries, align=center},
+    server/.style={rectangle, draw, rounded corners, fill=green!10, minimum width=3cm, minimum height=1.5cm, font=\bfseries},
     msg/.style={-{Stealth[scale=1.0]}, thick, font=\footnotesize}
 ]
 
-% Nodes
+% --- NODES ---
+% Cliente e KDC mais altos para caber as 4 setas confortavelmente
 \node[entity] (client) {Cliente};
-\node[entity, fill=red!10] (kdc) [right=4cm of client] {KDC (AS + TGS)};
-\node[entity, fill=green!10] (server) [below=4cm of kdc] {Servidor (SS)};
+\node[entity, fill=red!10] (kdc) [right=6cm of client] {KDC\\(AS + TGS)};
 
-% Messages
-% 1. AS_REQ
-\draw[msg] ($(client.east)+(0,0.5)$) -- ($(kdc.west)+(0,0.5)$) node[midway, above] {1. AS\_REQ (ID)};
+% Servidor posicionado abaixo, no centro (formato triangular)
+% Usamos a biblioteca calc para achar o meio: ($ (A)!0.5!(B) $) e descemos 5cm
+\node[server] (server) at ($(client)!0.5!(kdc) + (0,-5)$) {Servidor (SS)};
+
+% --- MESSAGES (CLIENTE <-> KDC) ---
+% Usamos yshift para distribuir verticalmente dentro da altura do nó
+
+% 1. AS_REQ (Topo)
+\draw[msg] ($(client.east)+(0, 1.5)$) -- ($(kdc.west)+(0, 1.5)$) 
+    node[midway, above] {1. AS\_REQ (ID)};
 
 % 2. AS_REP
-\draw[msg] ($(kdc.west)+(0,0.2)$) -- ($(client.east)+(0,0.2)$) node[midway, below] {2. AS\_REP ($T_{TGS}$, $K_{c,tgs}$)};
+\draw[msg] ($(kdc.west)+(0, 0.8)$) -- ($(client.east)+(0, 0.8)$) 
+    node[midway, above] {2. AS\_REP ($T_{TGS}$, $K_{c,tgs}$)};
+
+% --- Divisor visual opcional (linha pontilhada) ---
+\draw[dotted, gray] ($(client.east)+(0.5, 0)$) -- ($(kdc.west)+(-0.5, 0)$);
 
 % 3. TGS_REQ
-\draw[msg] ($(client.east)+(0,-0.2)$) -- ($(kdc.west)+(0,-0.2)$) node[midway, below, yshift=-3mm] {3. TGS\_REQ ($T_{TGS}$, Aut)};
+\draw[msg] ($(client.east)+(0, -0.8)$) -- ($(kdc.west)+(0, -0.8)$) 
+    node[midway, above] {3. TGS\_REQ ($T_{TGS}$, Aut)};
 
-% 4. TGS_REP
-\draw[msg] ($(kdc.west)+(0,-0.5)$) -- ($(client.east)+(0,-0.5)$) node[midway, below, yshift=-6mm] {4. TGS\_REP ($T_{Serv}$, $K_{c,s}$)};
+% 4. TGS_REP (Fundo)
+\draw[msg] ($(kdc.west)+(0, -1.5)$) -- ($(client.east)+(0, -1.5)$) 
+    node[midway, above] {4. TGS\_REP ($T_{Serv}$, $K_{c,s}$)};
 
-% 5. AP_REQ
-\draw[msg] (client.south) -- (server.west) node[midway, left, align=right] {5. AP\_REQ \\ ($T_{Serv}$, Aut)};
+% --- MESSAGES (CLIENTE <-> SERVIDOR) ---
 
-% 6. AP_REP
-\draw[msg] (server.west) -- ($(client.south)+(-0.5,0)$) node[midway, below, align=left, xshift=-1cm] {6. AP\_REP (Opcional)};
+% 5. AP_REQ (Curvado levemente para a esquerda)
+\draw[msg] (client.south) to[bend right=15] 
+    node[midway, left, align=right, xshift=-0.2cm] {5. AP\_REQ \\ ($T_{Serv}$, Aut)} 
+    (server.west);
+
+% 6. AP_REP (Curvado levemente para a direita - vindo do servidor)
+\draw[msg] (server.west) to[bend right=15] 
+    node[midway, right, align=left, font=\scriptsize] {6. AP\_REP (Opcional)} 
+    (client.south);
 
 \end{tikzpicture}
-\caption{Fluxo simplificado de mensagens do protocolo Kerberos.}
+\caption{Fluxo de mensagens do protocolo Kerberos com detalhamento das chaves.}
 \label{fig:kerberos_flow}
 \end{figure}
 
