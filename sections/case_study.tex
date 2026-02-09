@@ -1,18 +1,32 @@
 % SEÇÃO 4: ESTUDO DE CASO
-\section{Estudo de Caso: Microsoft Active Directory}
-\textcolor{red}{[WESLEY]}
+\section{Estudo de Caso: Implementação do Kerberos no Microsoft Active Directory}
+\label{sec:estudo_caso}
 
-Embora o Kerberos seja um padrão aberto, sua implementação mais difundida ocorre no Microsoft Active Directory (AD), utilizado globalmente para gerenciamento de identidades em redes corporativas. Desde o Windows 2000, o Kerberos é o protocolo de autenticação padrão, substituindo o antigo NTLM.
+A implementação do protocolo Kerberos no Microsoft Active Directory (AD) representa o padrão da indústria para gerenciamento de identidades em redes corporativas. Este estudo de caso analisa como a arquitetura do produto integra os conceitos teóricos de autenticação distribuída para prover segurança e transparência (Single Sign-On).
 
-No AD, os Controladores de Domínio (Domain Controllers) atuam como o KDC. Ao ingressar em um domínio, computadores e usuários recebem chaves secretas que são gerenciadas centralmente pelo AD.
+\subsection{O Controlador de Domínio como KDC}
+Na arquitetura Microsoft, o \textit{Domain Controller} (DC) desempenha o papel de \textit{Key Distribution Center} (KDC). Esta centralização é tecnicamente necessária pois o DC hospeda o banco de dados de diretório (\texttt{ntds.dit}), que armazena as chaves secretas (hashes de senha) de todos os objetos da floresta.
+Dessa forma, o serviço KDC no Windows Server opera duas sub-rotinas essenciais:
+\begin{itemize}
+    \item \textbf{Authentication Service (AS):} Responsável por verificar a identidade inicial do solicitante.
+    \item \textbf{Ticket Granting Service (TGS):} Responsável por emitir tickets de serviço baseados nas credenciais apresentadas.
+\end{itemize}
 
-\subsection{Single Sign-On (SSO)}
-A principal aplicação prática perceptível ao usuário final é o recurso de \textit{Single Sign-On} (SSO). Em um ambiente distribuído sem Kerberos, o usuário teria que digitar sua senha cada vez que acessasse uma pasta compartilhada em um servidor diferente ou acessasse a intranet.
+\subsection{Fluxo de Autenticação e PAC}
+Diferente da implementação pura do MIT Kerberos, o Microsoft AD introduz uma extensão crítica: o \textit{Privilege Attribute Certificate} (PAC).
+Enquanto o Kerberos padrão autentica \textit{quem} é o usuário, o AD precisa informar às aplicações \textit{o que} o usuário pode fazer. O PAC é um campo de dados inserido dentro do Ticket Kerberos que contém os SIDs (\textit{Security Identifiers}) dos grupos de segurança aos quais o usuário pertence.
 
-Com a implementação do Kerberos no AD, o processo ocorre em segundo plano:
-\begin{enumerate}
-    \item O usuário faz login na estação de trabalho (autenticação junto ao AS).
-    \item O sistema operacional armazena o TGT na memória segura (LSASS).
-    \item Quando o usuário clica em uma pasta de rede, o sistema operacional detecta a necessidade de autenticação, envia o TGT ao Controlador de Domínio (TGS), obtém o ticket de serviço e autentica-se no servidor de arquivos.
-\end{enumerate}
-Tudo isso ocorre de forma transparente, proporcionando segurança robusta sem sacrificar a usabilidade.
+Na prática, isso permite que a gestão de grupos no AD (ex: Grupos Globais ou Universais) tenha efeito imediato na autorização de acesso a sistemas integrados, sem a necessidade de reconfigurar cada aplicação individualmente.
+
+\subsection{Gerenciamento via GPO e Segurança}
+A segurança do protocolo Kerberos no AD não é estática; ela é gerenciada através de Objetos de Política de Grupo (GPO). Ferramentas administrativas como o \textit{Group Policy Management Console} (\texttt{gpmc.msc}) permitem aos administradores:
+\begin{itemize}
+    \item \textbf{Reforçar Criptografia:} Desabilitar algoritmos obsoletos (como RC4 ou DES) e forçar o uso de AES-128/256 para a encriptação de tickets, mitigando ataques de \textit{Kerberoasting}.
+    \item \textbf{Políticas de Ticket:} Definir o tempo de vida máximo de um TGT (padrão de 10 horas) e políticas de renovação, equilibrando segurança e usabilidade.
+\end{itemize}
+
+\subsection{Auditoria e Governança}
+Embora o Kerberos garanta a autenticação, a governança do ambiente AD depende de auditoria contínua. Em cenários de alta conformidade, apenas a autenticação não é suficiente; é necessário rastrear a emissão de tickets e alterações de privilégios.
+O AD gera logs de eventos de segurança (como o Event ID 4768 para solicitação de TGT) que podem ser consumidos por ferramentas de auditoria. Isso garante que a concessão de acesso via Kerberos seja rastreável, permitindo a detecção de anomalias como o uso de credenciais em horários atípicos ou tentativas de força bruta.
+
+Conclui-se que o Microsoft Active Directory não apenas implementa o Kerberos, mas o estende para criar um ecossistema onde a identidade é a chave mestra para a segurança de perímetro lógico.
