@@ -40,7 +40,15 @@ O funcionamento do Kerberos pode ser dividido em três fases distintas: a autent
 
 % Messages
 % 1. AS_REQ
-\draw[msg] ($(client.east)+(0,0.5)$) -- ($(kdc.west)+(0,0.5)$) node[midway, above] {1. AS\_REQ (ID)};
+\_REQ \\ ($T_{Serv}$, Aut)};
+
+% 6. AP_REP
+\draw[msg] (server.west) -- ($(client.south)+(-0.5,0)$) node[midway, below, align=left, xshift=-1cm] {6. AP\_REP (Opcional)};
+
+\end{tikzpicture}
+\caption{Fluxo simplificado de mensagens do protocolo Kerberos.}
+\label{fig:kerberos_flow}
+\end{figure}\draw[msg] ($(client.east)+(0,0.5)$) -- ($(kdc.west)+(0,0.5)$) node[midway, above] {1. AS\_REQ (ID)};
 
 % 2. AS_REP
 \draw[msg] ($(kdc.west)+(0,0.2)$) -- ($(client.east)+(0,0.2)$) node[midway, below] {2. AS\_REP ($T_{TGS}$, $K_{c,tgs}$)};
@@ -52,15 +60,7 @@ O funcionamento do Kerberos pode ser dividido em três fases distintas: a autent
 \draw[msg] ($(kdc.west)+(0,-0.5)$) -- ($(client.east)+(0,-0.5)$) node[midway, below, yshift=-6mm] {4. TGS\_REP ($T_{Serv}$, $K_{c,s}$)};
 
 % 5. AP_REQ
-\draw[msg] (client.south) -- (server.west) node[midway, left, align=right] {5. AP\_REQ \\ ($T_{Serv}$, Aut)};
-
-% 6. AP_REP
-\draw[msg] (server.west) -- ($(client.south)+(-0.5,0)$) node[midway, below, align=left, xshift=-1cm] {6. AP\_REP (Opcional)};
-
-\end{tikzpicture}
-\caption{Fluxo simplificado de mensagens do protocolo Kerberos.}
-\label{fig:kerberos_flow}
-\end{figure}
+\draw[msg] (client.south) -- (server.west) node[midway, left, align=right] {5. AP
 
 O detalhamento das etapas descritas na Figura \ref{fig:kerberos_flow} segue abaixo, destacando o uso das chaves criptográficas:
 
