@@ -1,30 +1,84 @@
 % SEÇÃO 3: O PROTOCOLO KERBEROS
 \section{O Protocolo Kerberos}
-\textcolor{red}{[LA]}
 
-Desenvolvido pelo MIT no projeto Athena, o Kerberos é um protocolo de autenticação de rede projetado para fornecer autenticação forte para aplicações cliente/servidor.
+O Kerberos é um protocolo de autenticação de rede projetado para fornecer autenticação forte para aplicações cliente/servidor usando criptografia de chave secreta. A versão 5 (V5), definida na RFC 4120, é o padrão atual da indústria e resolve o problema de transmitir identidades através de uma rede insegura sem expor senhas.
+
+\subsection{Origem e Significado}
+O nome do protocolo é uma referência direta à mitologia grega: Cérbero (\textit{Kerberos}), o cão de três cabeças que guardava os portões do submundo (Hades). A analogia reflete a arquitetura de confiança de três pontas do protocolo, onde as "cabeças" representam o Cliente, o Servidor e o KDC (Key Distribution Center), que juntos vigiam o acesso à rede.
+
+Historicamente, o protocolo foi desenvolvido no MIT (\textit{Massachusetts Institute of Technology}) em meados da década de 1980 como parte do \textbf{Projeto Athena}. O objetivo era criar um ambiente educacional distribuído onde estudantes pudessem acessar seus arquivos de qualquer estação de trabalho sem comprometer a segurança da rede. Baseado nas propostas teóricas de Needham e Schroeder, o Kerberos foi a solução encontrada para impedir que senhas trafegassem em texto claro, prevenindo ataques de interceptação (\textit{sniffing}) \cite{neuman1994}.
 
 \subsection{Arquitetura e Componentes}
-O ecossistema Kerberos é composto por três entidades lógicas principais:
+O ecossistema Kerberos opera baseando-se em tickets e é composto pelas três entidades lógicas mencionadas na analogia mitológica:
+
 \begin{itemize}
-    \item \textbf{Cliente:} A entidade (usuário ou software) que deseja acessar um recurso.
-    \item \textbf{Servidor de Aplicação (SS - Service Server):} O recurso que o cliente deseja acessar (ex: servidor de arquivos).
-    \item \textbf{KDC (Key Distribution Center):} A terceira parte confiável. O KDC mantém um banco de dados com as chaves secretas de todos os usuários e serviços. Logicamente, ele é dividido em dois subcomponentes:
+    \item \textbf{Cliente (Principal):} A entidade (usuário ou software) que deseja acessar um recurso. Cada cliente possui uma chave secreta $K_c$, geralmente derivada do hash de sua senha.
+    \item \textbf{Servidor de Aplicação (SS - Service Server):} O recurso que o cliente deseja acessar (ex: servidor de arquivos, banco de dados). O servidor compartilha uma chave secreta $K_s$ exclusivamente com o KDC.
+    \item \textbf{KDC (Key Distribution Center):} A terceira parte confiável (\textit{Trusted Third Party}). O KDC mantém um banco de dados com as chaves secretas de todos os usuários e serviços. Logicamente, ele é dividido em dois subcomponentes funcionais:
     \begin{itemize}
-        \item \textit{Authentication Server (AS):} Responsável pelo login inicial e emissão do TGT.
-        \item \textit{Ticket Granting Server (TGS):} Responsável por emitir tickets para serviços específicos com base em um TGT válido.
+        \item \textit{Authentication Server (AS):} Responsável pelo login inicial. Ele verifica a senha do usuário e emite o Ticket de Concessão de Tickets (TGT).
+        \item \textit{Ticket Granting Server (TGS):} Responsável por emitir tickets de serviço específicos para clientes que já possuem um TGT válido, viabilizando o recurso de \textit{Single Sign-On}.
     \end{itemize}
 \end{itemize}
 
-\subsection{Funcionamento e Troca de Mensagens}
-O fluxo de autenticação no Kerberos ocorre em etapas distintas, desenhadas para garantir que a senha do usuário nunca trafegue pela rede:
+\subsection{Fluxo de Mensagens e Chaves de Sessão}
+
+O funcionamento do Kerberos pode ser dividido em três fases distintas: a autenticação inicial, a obtenção de autorização para serviços e o acesso ao recurso. A Figura \ref{fig:kerberos_flow} ilustra a troca de mensagens entre as entidades.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=3cm,
+    entity/.style={rectangle, draw, fill=blue!10, minimum width=2.5cm, minimum height=1cm, font=\bfseries},
+    msg/.style={-{Stealth[scale=1.0]}, thick, font=\footnotesize}
+]
+
+% Nodes
+\node[entity] (client) {Cliente};
+\node[entity, fill=red!10] (kdc) [right=4cm of client] {KDC (AS + TGS)};
+\node[entity, fill=green!10] (server) [below=4cm of kdc] {Servidor (SS)};
+
+% Messages
+% 1. AS_REQ
+\draw[msg] ($(client.east)+(0,0.5)$) -- ($(kdc.west)+(0,0.5)$) node[midway, above] {1. AS\_REQ (ID)};
+
+% 2. AS_REP
+\draw[msg] ($(kdc.west)+(0,0.2)$) -- ($(client.east)+(0,0.2)$) node[midway, below] {2. AS\_REP ($T_{TGS}$, $K_{c,tgs}$)};
+
+% 3. TGS_REQ
+\draw[msg] ($(client.east)+(0,-0.2)$) -- ($(kdc.west)+(0,-0.2)$) node[midway, below, yshift=-3mm] {3. TGS\_REQ ($T_{TGS}$, Aut)};
+
+% 4. TGS_REP
+\draw[msg] ($(kdc.west)+(0,-0.5)$) -- ($(client.east)+(0,-0.5)$) node[midway, below, yshift=-6mm] {4. TGS\_REP ($T_{Serv}$, $K_{c,s}$)};
+
+% 5. AP_REQ
+\draw[msg] (client.south) -- (server.west) node[midway, left, align=right] {5. AP\_REQ \\ ($T_{Serv}$, Aut)};
+
+% 6. AP_REP
+\draw[msg] (server.west) -- ($(client.south)+(-0.5,0)$) node[midway, below, align=left, xshift=-1cm] {6. AP\_REP (Opcional)};
+
+\end{tikzpicture}
+\caption{Fluxo simplificado de mensagens do protocolo Kerberos.}
+\label{fig:kerberos_flow}
+\end{figure}
+
+O detalhamento das etapas descritas na Figura \ref{fig:kerberos_flow} segue abaixo, destacando o uso das chaves criptográficas:
 
 \begin{enumerate}
-    \item \textbf{Solicitação de Autenticação (AS\_REQ):} O cliente envia uma solicitação ao AS informando sua identidade (em texto claro).
-    \item \textbf{Emissão do TGT (AS\_REP):} O AS verifica se o usuário existe. Se sim, gera uma chave de sessão e um Ticket de Concessão de Tickets (TGT). O TGT é criptografado com a chave do TGS, e a resposta para o cliente é criptografada com a chave derivada da senha do usuário. O cliente decifra essa resposta, obtendo a chave de sessão e o TGT, sem que a senha tenha saído de sua máquina.
-    \item \textbf{Solicitação de Serviço (TGS\_REQ):} Quando o cliente precisa acessar um recurso (ex: impressora), ele envia ao TGS o seu TGT e um "Autenticador".
-    \item \textbf{Emissão do Ticket de Serviço (TGS\_REP):} O TGS valida o TGT. Se válido, gera um Ticket de Serviço (criptografado com a chave do servidor de destino) e o envia ao cliente.
-    \item \textbf{Acesso ao Recurso (AP\_REQ):} O cliente apresenta o Ticket de Serviço ao servidor da aplicação, que o decifra e valida a identidade do cliente, permitindo o acesso.
+    \item \textbf{Autenticação Inicial (AS):} O cliente envia uma solicitação em texto claro contendo seu ID para o AS. O AS verifica se o usuário existe em seu banco de dados.
+    
+    \item \textbf{Emissão do TGT:} O AS gera uma chave de sessão temporária ($K_{c,tgs}$) para comunicação futura com o TGS. O AS responde com duas mensagens:
+    \begin{itemize}
+        \item Mensagem A: Cifrada com a chave do usuário ($K_c$). Contém a chave de sessão $K_{c,tgs}$.
+        \item Mensagem B (TGT): Cifrada com a chave secreta do TGS ($K_{TGS}$). Contém o ID do cliente, validade e a chave de sessão $K_{c,tgs}$.
+    \end{itemize}
+    \textit{Nota:} O cliente decifra a Mensagem A usando sua senha. Se a senha estiver correta, ele obtém a chave de sessão. O TGT permanece cifrado e opaco para o cliente.
+
+    \item \textbf{Solicitação de Serviço (TGS):} Para acessar um recurso (ex: servidor de arquivos), o cliente envia ao TGS o TGT (obtido no passo anterior) e um \textit{Autenticador} (cifrado com $K_{c,tgs}$ contendo ID e Timestamp).
+    
+    \item \textbf{Emissão do Ticket de Serviço:} O TGS decifra o TGT com sua chave privada, recupera $K_{c,tgs}$ e usa essa chave para decifrar o Autenticador. Se validado, o TGS gera uma nova chave de sessão para o serviço específico ($K_{c,s}$) e envia um Ticket de Serviço cifrado com a chave do Servidor de Aplicação ($K_s$).
+
+    \item \textbf{Acesso ao Recurso:} O cliente envia o Ticket de Serviço e um novo Autenticador ao Servidor de Aplicação. O servidor usa sua chave $K_s$ para abrir o ticket, obter a chave de sessão $K_{c,s}$ e validar o usuário \cite{tanenbaum2017}.
 \end{enumerate}
 
 % Subseção: Vulnerabilidades e Mitigações - SAMICO 
