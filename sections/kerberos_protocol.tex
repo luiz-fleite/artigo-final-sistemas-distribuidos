@@ -4,7 +4,7 @@
 O Kerberos é um protocolo de autenticação de rede projetado para fornecer autenticação forte para aplicações cliente/servidor usando criptografia de chave secreta. A versão 5 (V5), definida na RFC 4120 \cite{rfc4120}, é o padrão atual da indústria e resolve o problema de transmitir identidades através de uma rede insegura sem expor senhas.
 
 \subsection{Origem e Significado}
-O nome do protocolo é uma referência direta à mitologia grega: Cérbero (\textit{Kerberos}), o cão de três cabeças que guardava os portões do submundo (Hades). A analogia reflete a arquitetura de confiança de três pontas do protocolo, onde as "cabeças" representam o Cliente, o Servidor e o KDC (Key Distribution Center), que juntos vigiam o acesso à rede.
+O nome do protocolo é uma referência direta à mitologia grega: Cérbero (\textit{Kerberos}), o cão de três cabeças que guardava os portões do submundo (Hades). A analogia reflete a arquitetura de confiança de três pontas do protocolo, onde as ``cabeças'' representam o Cliente, o Servidor e o KDC (Key Distribution Center), que juntos vigiam o acesso à rede.
 
 Historicamente, o protocolo foi desenvolvido no MIT (\textit{Massachusetts Institute of Technology}) em meados da década de 1980 como parte do \textbf{Projeto Athena}. O objetivo era criar um ambiente educacional distribuído onde estudantes pudessem acessar seus arquivos de qualquer estação de trabalho sem comprometer a segurança da rede. Baseado nas propostas teóricas de Needham e Schroeder, o Kerberos foi a solução encontrada para impedir que senhas trafegassem em texto claro, prevenindo ataques de interceptação (\textit{sniffing}) \cite{neuman1994}.
 
@@ -85,20 +85,20 @@ O funcionamento do Kerberos pode ser dividido em três fases distintas: a autent
 O detalhamento das etapas descritas na Figura \ref{fig:kerberos_flow} segue abaixo, destacando o uso das chaves criptográficas:
 
 \begin{enumerate}
-    \item \textbf{Autenticação Inicial (AS):} O cliente envia uma solicitação em texto claro contendo seu ID para o AS. O AS verifica se o usuário existe em seu banco de dados.
+    \item \textbf{Autenticação Inicial (AS):} o cliente envia uma solicitação em texto claro contendo seu ID para o AS. O AS verifica se o usuário existe em seu banco de dados.
     
-    \item \textbf{Emissão do TGT:} O AS gera uma chave de sessão temporária ($K_{c,tgs}$) para comunicação futura com o TGS. O AS responde com duas mensagens:
+    \item \textbf{Emissão do TGT:} o AS gera uma chave de sessão temporária ($K_{c,tgs}$) para comunicação futura com o TGS. O AS responde com duas mensagens:
     \begin{itemize}
-        \item Mensagem A: Cifrada com a chave do usuário ($K_c$). Contém a chave de sessão $K_{c,tgs}$.
-        \item Mensagem B (TGT): Cifrada com a chave secreta do TGS ($K_{TGS}$). Contém o ID do cliente, validade e a chave de sessão $K_{c,tgs}$.
+        \item Mensagem A: cifrada com a chave do usuário ($K_c$). Contém a chave de sessão $K_{c,tgs}$.
+        \item Mensagem B (TGT): cifrada com a chave secreta do TGS ($K_{TGS}$). Contém o ID do cliente, validade e a chave de sessão $K_{c,tgs}$.
     \end{itemize}
-    \textit{Nota:} O cliente decifra a Mensagem A usando sua senha. Se a senha estiver correta, ele obtém a chave de sessão. O TGT permanece cifrado e opaco para o cliente.
+    \small{\textit{Nota:} o cliente decifra a Mensagem A usando sua senha. Se a senha estiver correta, ele obtém a chave de sessão. O TGT permanece cifrado e opaco para o cliente.}
 
-    \item \textbf{Solicitação de Serviço (TGS):} Para acessar um recurso (ex: servidor de arquivos), o cliente envia ao TGS o TGT (obtido no passo anterior) e um \textit{Autenticador} (cifrado com $K_{c,tgs}$ contendo ID e Timestamp).
+    \item \textbf{Solicitação de Serviço (TGS):} para acessar um recurso (ex: servidor de arquivos), o cliente envia ao TGS o TGT (obtido no passo anterior) e um \textit{Autenticador} (cifrado com $K_{c,tgs}$ contendo ID e Timestamp).
     
-    \item \textbf{Emissão do Ticket de Serviço:} O TGS decifra o TGT com sua chave privada, recupera $K_{c,tgs}$ e usa essa chave para decifrar o Autenticador. Se validado, o TGS gera uma nova chave de sessão para o serviço específico ($K_{c,s}$) e envia um Ticket de Serviço cifrado com a chave do Servidor de Aplicação ($K_s$).
+    \item \textbf{Emissão do Ticket de Serviço:} o TGS decifra o TGT com sua chave privada, recupera $K_{c,tgs}$ e usa essa chave para decifrar o Autenticador. Se validado, o TGS gera uma nova chave de sessão para o serviço específico ($K_{c,s}$) e envia um Ticket de Serviço cifrado com a chave do Servidor de Aplicação ($K_s$).
 
-    \item \textbf{Acesso ao Recurso:} O cliente envia o Ticket de Serviço e um novo Autenticador ao Servidor de Aplicação. O servidor usa sua chave $K_s$ para abrir o ticket, obter a chave de sessão $K_{c,s}$ e validar o usuário \cite{tanenbaum2017}.
+    \item \textbf{Acesso ao Recurso:} o cliente envia o Ticket de Serviço e um novo Autenticador ao Servidor de Aplicação. O servidor usa sua chave $K_s$ para abrir o ticket, obter a chave de sessão $K_{c,s}$ e validar o usuário \cite{tanenbaum2017}.
 \end{enumerate}
 
 % Subseção: Vulnerabilidades e Mitigações - SAMICO 

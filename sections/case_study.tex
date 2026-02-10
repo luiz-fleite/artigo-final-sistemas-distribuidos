@@ -8,8 +8,8 @@ A implementação do protocolo Kerberos no Microsoft Active Directory (AD) repre
 Na arquitetura Microsoft, o \textit{Domain Controller} (DC) desempenha o papel de \textit{Key Distribution Center} (KDC). Esta centralização é tecnicamente necessária pois o DC hospeda o banco de dados de diretório (\texttt{ntds.dit}), que armazena as chaves secretas (hashes de senha) de todos os objetos da floresta.
 Dessa forma, o serviço KDC no Windows Server opera duas sub-rotinas essenciais:
 \begin{itemize}
-    \item \textbf{Authentication Service (AS):} Responsável por verificar a identidade inicial do solicitante.
-    \item \textbf{Ticket Granting Service (TGS):} Responsável por emitir tickets de serviço baseados nas credenciais apresentadas.
+    \item \textbf{Authentication Service (AS):} responsável por verificar a identidade inicial do solicitante.
+    \item \textbf{Ticket Granting Service (TGS):} responsável por emitir tickets de serviço baseados nas credenciais apresentadas.
 \end{itemize}
 
 \subsection{Fluxo de Autenticação e PAC}
@@ -21,8 +21,8 @@ Na prática, isso permite que a gestão de grupos no AD (ex: Grupos Globais ou U
 \subsection{Gerenciamento via GPO e Segurança}
 A segurança do protocolo Kerberos no AD não é estática; ela é gerenciada através de Objetos de Política de Grupo (GPO). Ferramentas administrativas como o \textit{Group Policy Management Console} (\texttt{gpmc.msc}) permitem aos administradores:
 \begin{itemize}
-    \item \textbf{Reforçar Criptografia:} Desabilitar algoritmos obsoletos (como RC4 ou DES) e forçar o uso de AES-128/256 para a encriptação de tickets, mitigando ataques de \textit{Kerberoasting}.
-    \item \textbf{Políticas de Ticket:} Definir o tempo de vida máximo de um TGT (padrão de 10 horas) e políticas de renovação, equilibrando segurança e usabilidade.
+    \item \textbf{Reforçar Criptografia:} desabilitar algoritmos obsoletos (como RC4 ou DES) e forçar o uso de AES-128/256 para a encriptação de tickets, mitigando ataques de \textit{Kerberoasting}.
+    \item \textbf{Políticas de Ticket:} definir o tempo de vida máximo de um TGT (padrão de 10 horas) e políticas de renovação, equilibrando segurança e usabilidade.
 \end{itemize}
 
 \subsection{Auditoria e Governança}
